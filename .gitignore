@@ -38,3 +38,10 @@ coverage/
 
 # Local development files
 *.local
+
+# Frontend build files
+frontend/dist/
+frontend/node_modules/
+
+# HLS files
+nginx-rtmp/hls/
