@@ -1,0 +1,39 @@
+# 1️⃣ 빌드 스테이지 (builder)
+FROM ubuntu:20.04 AS builder
+
+# 필수 패키지 설치 (빌드 도구 + Nginx 빌드에 필요한 라이브러리)
+RUN apt-get update && \
+    apt-get install -y build-essential libpcre3 libpcre3-dev libssl-dev zlib1g-dev wget unzip
+
+# Nginx 및 RTMP 모듈 다운로드
+RUN wget http://nginx.org/download/nginx-1.21.0.tar.gz && \
+    wget https://github.com/arut/nginx-rtmp-module/archive/master.zip && \
+    tar -zxvf nginx-1.21.0.tar.gz && \
+    unzip master.zip
+
+# Nginx 빌드 및 설치
+RUN cd nginx-1.21.0 && \
+    ./configure --add-module=../nginx-rtmp-module-master --with-http_ssl_module && \
+    make && \
+    make install
+
+# 2️⃣ 실행 스테이지 (runtime)
+FROM ubuntu:20.04
+
+# 실행에 필요한 최소 패키지만 설치
+RUN apt-get update && apt-get install -y libpcre3 zlib1g ffmpeg
+
+# 빌드 스테이지에서 생성된 Nginx 실행 파일 및 필수 디렉토리만 복사
+COPY --from=builder /usr/local/nginx /usr/local/nginx
+
+# Nginx 설정 파일 복사
+COPY nginx.conf /usr/local/nginx/conf/nginx.conf
+
+# HLS 파일 저장 경로 생성
+RUN mkdir -p /tmp/hls
+
+# 포트 개방 (RTMP: 1935, HTTP: 80)
+EXPOSE 1935 8080
+
+# Nginx 실행
+CMD ["/usr/local/nginx/sbin/nginx", "-g", "daemon off;"]

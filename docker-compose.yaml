@@ -1,0 +1,11 @@
+version: '3'
+services:
+  nginx-rtmp:
+    container_name: nginx_rtmp_server
+    # image: alfg/nginx-rtmp
+    build: ./nginx-rtmp
+    ports:
+      - '1935:1935'
+      - '8080:8080'
+    volumes:
+      - ./hls:/tmp/hls
