@@ -26,7 +26,7 @@ export class UserController {
   }
 
   @Get('kakao/redirect')
-  async kakaoAuthRedirect(@Query('code') code: string) {
+  async kakaoAuthRedirect(@Query('code') code: string, @Res() res: Response) {
     // 인가 코드를 사용하여 카카오 토큰 및 사용자 정보를 가져오는 로직
     const token = await this.userService.getKakaoToken(code);
     const userInfo = await this.userService.getKakaoUserInfo(token);
@@ -37,8 +37,8 @@ export class UserController {
       user = await this.userService.create(userInfo);
     }
 
-    const accessToken = this.userService.generateAccessToken(user);
-    return { accessToken };
+    const jwt = this.userService.generateAccessToken(user);
+    res.redirect(`http://localhost:5173/login?token=${jwt}`);
   }
 
   @UseGuards(AuthGuard)
